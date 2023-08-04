@@ -12,6 +12,8 @@ TBMessage tMessage;
 #define RST 14
 #define DI0 26
 #define BAND 433E6
+#define BUZZER_PIN 23
+#define LED_PIN 22
 
 String wifiSSID = "BMZimages";
 String wifiPassword = "bennamazarina";
@@ -26,6 +28,9 @@ String setStatus(int percentage, int gyro);
 void setup()
 {
   pinMode(16, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
   digitalWrite(16, LOW); // set GPIO16 low to reset OLED
   delay(50);
   digitalWrite(16, HIGH);
@@ -72,6 +77,11 @@ void loop()
       moisture = data.substring(0, data.indexOf(",")).toInt();
       gyro = data.substring(data.indexOf(",") + 1).toInt();
       status = setStatus(moisture, gyro);
+
+      display.setFont(ArialMT_Plain_16);
+      display.drawString(64, 13, status);
+      display.drawString(64, 45, String(moisture) + "%");
+      display.display();
       if (status != prevStatus)
       {
         reply = "";
@@ -80,11 +90,14 @@ void loop()
         reply += "Soil Moisture : " + String(moisture) + "%";
         prevStatus = status;
         myBot.sendMessage(tMessage.sender.id, reply);
+        while (status == "LONGSOR")
+        {
+          digitalWrite(LED_PIN, LOW);
+          delay(200);
+          digitalWrite(LED_PIN, HIGH);
+          delay(200);
+        }
       }
-      display.setFont(ArialMT_Plain_16);
-      display.drawString(64, 13, status);
-      display.drawString(64, 45, String(moisture) + "%");
-      display.display();
     }
 
     if (myBot.getNewMessage(tMessage))
@@ -94,7 +107,7 @@ void loop()
         if (tMessage.text.equalsIgnoreCase("/start"))
         {
           reply = "";
-          reply += "Hi, welcome to Landslide Detection Bot\n";
+          reply += "Hai, welcome to Landslide Detection Bot\n";
           reply += "Command List as below : \n";
           reply += "Get Status : /get_status \n";
           reply += "Get Soil Moisture : /get_moist \n";
@@ -123,18 +136,25 @@ void loop()
 
 String setStatus(int percentage, int gyro)
 {
-  if (percentage >= 60 && gyro == 1)
+  if (gyro == 1)
+  {
+    digitalWrite(BUZZER_PIN, HIGH);
     return "LONGSOR";
-  else if (percentage >= 60 && gyro == 0)
-    return "BAHAYA";
-  else if (percentage >= 45)
-    return "SIAGA";
-  else if (percentage >= 30)
-    return "WASPADA";
-  else if (percentage >= 0)
-    return "NORMAL";
+  }
   else
-    return "NO DATA";
+  {
+    // digitalWrite(BUZZER_PIN, LOW);
+    if (percentage >= 75 && gyro == 0)
+      return "BAHAYA";
+    else if (percentage >= 50)
+      return "SIAGA";
+    else if (percentage >= 25)
+      return "WASPADA";
+    else if (percentage >= 0)
+      return "NORMAL";
+    else
+      return "NO DATA";
+  }
 }
 
 void connectWifi()

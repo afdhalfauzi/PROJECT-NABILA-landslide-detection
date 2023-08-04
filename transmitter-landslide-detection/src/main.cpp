@@ -73,7 +73,7 @@ bool isFell()
     // Serial.println(roll, 2);
     // if (pitch > 50 || pitch < -50 || roll > 50 || roll < -50)
     //     return 1;
-    if (gyr.x > 200 || gyr.x < -200 || gyr.y > 200 || gyr.y < -200 || gyr.z > 200 || gyr.z < -200)
+    if (gyr.x > 100 || gyr.x < -100 || gyr.y > 100 || gyr.y < -100 || gyr.z > 100 || gyr.z < -100)
     {
         return 1;
     }
@@ -86,5 +86,5 @@ int readMoisture()
     Serial.print("\t Humidity: ");
     Serial.println(analogRead(MOIST_PIN));
     moist_value = analogRead(MOIST_PIN);
-    return map(moist_value, 1023, 150, 0, 100);
+    return map(moist_value, 1023, 100, 0, 100);
 }
